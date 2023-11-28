@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  redis-db:
+    container_name: redis-db
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - REDIS_VERSION=7.2.3
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      my-network:
+        ipv4_address: 172.23.0.3
+    volumes:
+      - ./conf/redis.conf:/usr/local/etc/redis/redis.conf:rw
+      - ../docker-volumes/redis/logs:/logs:rw
+      - ../docker-volumes/redis/data:/data:rw
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+          gateway: 172.23.0.1

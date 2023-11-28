@@ -1,0 +1,32 @@
+# 构建时指定的参数变量
+ARG GLUME_VERSION=8-jre
+ARG GLUME_JAR_NAME=project-name
+
+# 基础镜像
+FROM openjdk:${GLUME_VERSION}
+
+# 镜像维护者
+MAINTAINER TuoYingtao
+
+# 挂载目录
+VOLUME ["/home/${GLUME_JAR_NAME}"]
+
+# 创建目录
+RUN mkdir -p /home/${GLUME_JAR_NAME}
+
+# 指定路径
+WORKDIR /home/${GLUME_JAR_NAME}
+
+# 复制jar文件到挂载目录
+COPY /jar/${GLUME_JAR_NAME}.jar /home/${GLUME_JAR_NAME}/${GLUME_JAR_NAME}.jar
+
+# 设置时区为上海
+ENV TZ="Asia/Shanghai"
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime  \
+    && echo $TZ > /etc/timezone \
+# Ubuntu软件源选择中国的服务器
+    && sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+
+# 启动系统服务
+ENTRYPOINT ["java","-jar", "-Dfile.encoding=utf-8", "-Xms256m", "-Xmx1024m", "-XX:MetaspaceSize=128m", "-XX:MaxMetaspaceSize=512m", "${GLUME_JAR_NAME}.jar"]

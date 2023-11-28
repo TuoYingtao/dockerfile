@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  nacos-service:
+    container_name: nacos-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NACOS_VERSION=v2.2.1
+    restart: on-failure
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    networks:
+      other-network:
+        ipv4_address: 172.23.0.4
+    depends_on:
+      - mysql-db
+    env_file:
+      - ./conf/env/nacos-standlone-mysql.env
+    environment:
+      - NACOS_APPLICATION_PORT=9999
+      - JVM_XMS=512m
+      - JVM_MMS=320m
+    volumes:
+      - ./conf/application.properties:/home/nacos/conf/application.properties:rw
+      - ./conf/plugins:/home/nacos/plugins:rw
+      - ../docker-volumes/nacos/logs:/home/nacos/logs:rw
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+          gateway: 172.23.0.1
