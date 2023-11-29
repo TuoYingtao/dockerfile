@@ -36,7 +36,7 @@ services:
       '--lower-case-table-names=1',
     ]
     healthcheck:
-      test: [ "CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1", "-uroot", "-123456" ]
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1", "-uroot", "-p123456" ]
       start_period: 60s
       interval: 5s
       timeout: 10s

@@ -1,5 +1,5 @@
 # 构建时指定的参数变量
-ARG RABBITMQ_VERSION="3.13-rc-management"
+ARG RABBITMQ_VERSION="3.12.9-management-alpine"
 
 # 基础镜像
 FROM rabbitmq:${RABBITMQ_VERSION}

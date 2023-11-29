@@ -8,26 +8,23 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - RABBITMQ_VERSION=3.13-rc-management
+        - RABBITMQ_VERSION=3.12.9-management-alpine
     restart: always                                                     # 容器重启策略 always：容器总是重新启动
     ports:                                                              # 容器端口映射公共端口
       - "5672:5672"
       - "15672:15672"
     networks:                                                           # 当前容器所在的网络环境
-      other-network:
+      my-network:
         ipv4_address: 172.23.0.5
-    environment:                                                        # 容器环境变量
+    environment:
       - RABBITMQ_ERLANG_COOKIE=rabbitcookie
-      - RABBITMQ_NODENAME=rabbit@service-rabbit
-      - RABBITMQ_DEFAULT_USER=rabbit
-      - RABBITMQ_DEFAULT_PASS=rabbit
+      - RABBITMQ_NODENAME=rabbit@localhost
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     volumes:                                                            # 数据卷映射
       - ./conf/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:rw
       - ../docker-volumes/rabbitmq/data:/var/lib/rabbitmq/mnesia:rw
       - ../docker-volumes/rabbitmq/logs:/var/log/rabbitmq/:rw
-    command: [
-      "rabbitmq-plugins", "enable", "rabbitmq_management",
-    ]
     healthcheck:                                                        # 用于确认一个服务是否是健康
       test: [ "CMD", "curl", "-f", "http://127.0.0.1:15672" ]
       start_period: 60s                                                 # 容器启动后多久开始执行 healthcheck
@@ -35,9 +32,6 @@ services:
       timeout: 10s                                                      # 执行超时时间
       retries: 5                                                        # 重试次数
 networks:
-  other-network:
-    external: true
-    name: mysql_my-network
   my-network:                                                           # 自定义网络名称
     driver: bridge                                                      # 网关驱动
     ipam:

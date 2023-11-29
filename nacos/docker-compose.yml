@@ -7,20 +7,20 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - NACOS_VERSION=v2.2.1
+        - NACOS_VERSION=v2.2.3-slim
     restart: on-failure
     ports:
       - "8848:8848"
       - "9848:9848"
     networks:
-      other-network:
+      my-network:
         ipv4_address: 172.23.0.4
     depends_on:
       - mysql-db
     env_file:
       - ./conf/env/nacos-standlone-mysql.env
     environment:
-      - NACOS_APPLICATION_PORT=9999
+      - NACOS_APPLICATION_PORT=8848
       - JVM_XMS=512m
       - JVM_MMS=320m
     volumes:

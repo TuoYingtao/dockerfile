@@ -1,5 +1,5 @@
 # 构建时指定的参数变量
-ARG NACOS_VERSION=latest
+ARG NACOS_VERSION="v2.2.3-slim"
 
 # 基础镜像
 FROM nacos/nacos-server:${NACOS_VERSION}
@@ -10,7 +10,7 @@ LABEL maintainer="TuoYingtao" description="Nacos 服务" version="${NACOS_VERSIO
 
 # 设置时区为上海
 ENV TZ="Asia/Shanghai" \
-    NACOS_APPLICATION_PORT=9999 \
+    NACOS_APPLICATION_PORT=8848 \
     JVM_XMS=512m \
     JVM_MMS=320m
 
