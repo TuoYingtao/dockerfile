@@ -34,6 +34,7 @@ services:
 networks:
   my-network:                                                           # 自定义网络名称
     driver: bridge                                                      # 网关驱动
+    external: false
     ipam:
       driver: default
       config:

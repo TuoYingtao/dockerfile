@@ -30,6 +30,7 @@ services:
 networks:
   my-network:
     driver: bridge
+    external: false
     ipam:
       driver: default
       config:
