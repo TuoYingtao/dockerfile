@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  java-service:
+    container_name: java-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - JAR_PROJECT_NAME=java-service
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    networks:
+      my-network:
+    volumes:
+      - ./conf/:/home/java-service/:rw
+    depends_on:
+      - mysql-db
+    links:
+      - mysql-db
+networks:
+  my-network:
+    driver: bridge
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+          gateway: 172.23.0.1
