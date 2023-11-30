@@ -17,14 +17,13 @@ services:
       my-network:
         ipv4_address: 172.23.0.6
     environment:
-      - "INSTALL4J_ADD_VM_PARAMS=-Xms128m -Xmx512m -XX:MaxDirectMemorySize=512m -Djava.util.prefs.userRoot=/nexus-data/javaprefs"
+      - "INSTALL4J_ADD_VM_PARAMS=-Xms128m -Xmx512m -XX:MaxDirectMemorySize=512m -Dstorage.diskCache.diskFreeSpaceLimit=4096 -Djava.util.prefs.userRoot=/nexus-data/javaprefs"
       - TZ="Asia/Shanghai"
     volumes:
       - ./conf/nexus.properties:/opt/sonatype/nexus/etc/nexus.properties:rw
       - ../docker-volumes/nexus3/logs:/nexus-log:rw
       - ../docker-volumes/nexus3/data:/nexus-data:rw
 #    command: ["sh", "-c", "cat", "/nexus-data/admin.password && echo"]
-#    command: ["sh", "-c", "cat /nexus-data/admin.password && sleep infinity"]
 networks:
   my-network:
     driver: bridge
