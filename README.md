@@ -5,12 +5,12 @@ Dockerfile 镜像构建
 
 1. Docker 初始化SQL异常：`Error: , SQL State: 00000, Message: Transaction failed`。
 
-    `mysql -> db` 文件夹下的 `[privileges.sql](mysql%2Fdb%2Fprivileges.sql)` 在部署到Docker容器中进行初始化时，会提示以下报错信息:
+    `mysql -> db` 文件夹下的 [privileges.sql](mysql%2Fdb%2Fprivileges.sql) 在部署到Docker容器中进行初始化时，会提示以下报错信息:
     ```shell
     ErrResult
     Error: , SQL State: 00000, Message: Transaction failed
     ```
-    这是因为在`[privileges.sql](mysql%2Fdb%2Fprivileges.sql)`的InitDatabaseAndUser存储过程中捕获到的异常。
+    这是因为在[privileges.sql](mysql%2Fdb%2Fprivileges.sql)的InitDatabaseAndUser存储过程中捕获到的异常。
     而报错的原因是由这段代码引起的：
     ```sql
     -- 数据库名称
