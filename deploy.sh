@@ -13,15 +13,14 @@ BASE_ENVS=(
 
 # 程序服务变量
 JAR_PROJECTS=(
-  ${PROJECT_NAME}-server
-  ${PROJECT_NAME}-server2
+  ${PROJECT_NAME}-service
 )
 
 # 暴露端口变量
 EXPORT_PORTS=(
   80
-  3307
-  8082
+  3306
+  8080
 )
 
 #========================================= docker =========================================
