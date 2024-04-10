@@ -21,6 +21,11 @@ ADD /db/*.sql /docker-entrypoint-initdb.d/
 COPY "./setup.sh" "./setup.sh"
 COPY /db/*.sql /mysql/
 
+# 阉割版SQL是没有将mysqlbinlog构建进去需要这就导入
+#COPY /tools/mysqlbinlog-5.7.10 /usr/bin/mysqlbinlog
+COPY /tools/mysqlbinlog-8.0.32-debian /usr/bin/mysqlbinlog
+
+
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone
 
