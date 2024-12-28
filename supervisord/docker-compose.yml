@@ -1,0 +1,29 @@
+version: "3.8"
+services:
+  ubuntu-supervisor-test:
+    container_name: ubuntu-supervisor-test
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "9002:9001"
+    networks:
+      my-network:
+        ipv4_address: 172.23.0.12
+    privileged: false # 获取宿主机更高的权限 （存在安全风险）
+    tty: true         # 分配交互式的终端环境
+#    command:
+#      - /usr/bin/bash
+#      - -c
+#      - |
+#        supervisord -c /etc/supervisord.conf
+#        while true;do sleep 100;done
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+          gateway: 172.23.0.1

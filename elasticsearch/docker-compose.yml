@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  es01:
+    container_name: es01
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "9200:9200"
+    networks:
+      my-network:
+        ipv4_address: 172.23.0.7
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ../docker-volumes/efk/es/data01:/usr/share/elasticsearch/data:rw
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.4.2
+    container_name: kibana
+    restart: always
+    ports:
+      - "5601:5601"
+    networks:
+      my-network:
+        ipv4_address: 172.23.0.8
+    volumes:
+      - /data/docker/efk/kibana/config:/usr/share/kibana/config:rw
+  fluentd-es:
+    image: registry.us-west-1.aliyuncs.com/mobikok/base/fluentd-es:latest
+    container_name: fluentd-es
+    restart: always
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    networks:
+      my-network:
+        ipv4_address: 172.23.0.9
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 500m
+        max-file: "5"
+    volumes:
+      - /data/docker/efk/fluentd/conf:/fluentd/etc:rw
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+  data03:
+    driver: local
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+          gateway: 172.23.0.1

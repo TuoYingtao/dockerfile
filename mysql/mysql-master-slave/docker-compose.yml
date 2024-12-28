@@ -1,0 +1,94 @@
+version: '3.8'
+
+x-config: &conf
+  restart: unless-stopped
+  privileged: true
+  logging:
+    driver: 'json-file'
+    options:
+      max-size: '30m'
+      max-file: '1'
+  healthcheck:
+    test: [ "CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1", "-uroot", "-pmysql@tuoyingtao.com" ]
+    start_period: 60s
+    interval: 5s
+    timeout: 10s
+    retries: 5
+x-config-environment:
+  environment: &env
+    - TZ=Asia/Shanghai
+    - MYSQL_ALLOW_EMPTY_PASSWORD=no
+    - MYSQL_ROOT_PASSWORD=mysql@tuoyingtao.com
+    - MYSQL_DATABASE=acedia-mysql-db
+    - MYSQL_USER=test
+    - MYSQL_PASSWORD=test
+x-config-cmd:
+  command: &cmd [
+    'mysqld',
+    '--default-authentication-plugin=caching_sha2_password',
+    '--character-set-server=utf8mb4',
+    '--collation-server=utf8mb4_general_ci',
+    '--innodb-buffer-pool-size=80M',
+    '--default-time-zone=+8:00',
+    '--lower-case-table-names=1',
+    '--max-connections=10000',
+    '--max-connect-errors=2000',
+    '--group-concat-max-len=102400',
+    '--max-allowed-packet=20971520',
+    '--init-connect=SET NAMES utf8mb4;',
+    '--innodb-flush-log-at-trx-commit=0',
+  ]
+
+services:
+  acedia-mysql-db-master:
+    container_name: acedia-mysql-db-master
+    build:
+      context: ./mysql/master/
+      dockerfile: Dockerfile
+      args:
+        - MYSQL_VERSION=8.2.0
+    ports:
+      - "3306:3306"
+    networks:
+      acedia-network:
+        ipv4_address: 172.23.10.2
+    volumes:
+#      - ./db:/docker-entrypoint-initdb.d/
+      - ./mysql/master/my.cnf:/etc/mysql/conf.d:ro
+      - ../docker-volumes/mysql/master/logs:/logs:rw
+      - ../docker-volumes/mysql/master/data:/var/lib/mysql:rw
+    environment: *env
+    command: *cmd
+    <<: *conf
+  acedia-mysql-db-slave-backup:
+    container_name: acedia-mysql-db-slave-backup
+    build:
+      context: ./mysql/slave/
+      dockerfile: Dockerfile
+      args:
+        - MYSQL_VERSION=8.2.0
+    ports:
+      - "3307:3306"
+    depends_on:
+      - acedia-mysql-db-master
+    networks:
+      - acedia-network
+    volumes:
+#      - ./db:/docker-entrypoint-initdb.d/
+      - ./mysql/slave/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - ../docker-volumes/mysql/slave/logs:/logs:rw
+      - ../docker-volumes/mysql/slave/data:/var/lib/mysql:rw
+    environment: *env
+    command: *cmd
+    <<: *conf
+
+networks:
+  acedia-network:
+    name: acedia-network
+    driver: bridge
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.10.0/24
+          gateway: 172.23.10.1

@@ -1,5 +1,6 @@
 # 构建时指定的参数变量
 ARG REDIS_VERSION=7.2
+ARG REDIS_PASSWORD=redis@tuoyingtao.com
 
 # 基础镜像
 FROM redis:${REDIS_VERSION}
@@ -11,7 +12,7 @@ LABEL maintainer="TuoYingtao" description="Redis 服务" version="${REDIS_VERSIO
 
 ENV TZ="Asia/Shanghai" \
     APPENDONLY=yes \
-    REQUIREPASS=123456
+    REQUIREPASS=${REDIS_PASSWORD}
 
 
 COPY /conf/redis.conf /usr/local/etc/redis/redis.conf
@@ -19,4 +20,4 @@ COPY /conf/redis.conf /usr/local/etc/redis/redis.conf
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime  \
     && echo $TZ > /etc/timezone
 
-CMD ["redis-server", "/usr/local/etc/redis/redis.conf"]
+CMD ["sh", "-c", "redis-server", "--requirepass", "${REDIS_PASSWORD}", "&&",  "redis-server", "/usr/local/etc/redis/redis.conf"]

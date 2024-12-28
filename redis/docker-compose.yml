@@ -18,7 +18,12 @@ services:
       - ./conf/redis.conf:/usr/local/etc/redis/redis.conf:rw
       - ../docker-volumes/redis/logs:/logs:rw
       - ../docker-volumes/redis/data:/data:rw
-    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    command: [
+      "sh", "-c",
+      "redis-server", "--requirepass", "redis@tuoyingtao.com",
+      "&&",
+      "redis-server", "/usr/local/etc/redis/redis.conf"
+    ]
 networks:
   my-network:
     driver: bridge

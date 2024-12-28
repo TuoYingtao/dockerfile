@@ -11,7 +11,9 @@ services:
     restart: on-failure
     ports:
       - "8848:8848"
+      - "9847:9847"
       - "9848:9848"
+      - "9849:9849"
     networks:
       my-network:
         ipv4_address: 172.23.0.4
@@ -23,10 +25,20 @@ services:
       - NACOS_APPLICATION_PORT=8848
       - JVM_XMS=512m
       - JVM_MMS=320m
+      - PREFER_HOST_MODE=hostname
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=mysql
+      - MYSQL_SERVICE_DB_NAME=nacos_devtest
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_USER=nacos
+      - MYSQL_SERVICE_PASSWORD=nacos@tuoyingtao.com
+      - management.endpoints.web.exposure.include=*
     volumes:
       - ./conf/application.properties:/home/nacos/conf/application.properties:rw
       - ./conf/plugins:/home/nacos/plugins:rw
       - ../docker-volumes/nacos/logs:/home/nacos/logs:rw
+      - ../docker-volumes/nacos/standalone-logs/:/home/nacos/logs:rw
 networks:
   my-network:
     driver: bridge

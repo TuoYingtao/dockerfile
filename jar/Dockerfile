@@ -26,5 +26,7 @@ ENV TZ="Asia/Shanghai"
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime  \
     && echo $TZ > /etc/timezone
 
+ENV JAVA_OPTS="-Xms256m -Xmx1024m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=512m"
+
 # 启动系统服务
-ENTRYPOINT ["java","-jar", "-Dfile.encoding=utf-8", "-Xms256m", "-Xmx1024m", "-XX:MetaspaceSize=128m", "-XX:MaxMetaspaceSize=512m", "${JAR_PROJECT_NAME}.jar"]
+ENTRYPOINT ["java","-jar", "-Dfile.encoding=utf-8", "${JAVA_OPTS}", "${JAR_PROJECT_NAME}.jar"]

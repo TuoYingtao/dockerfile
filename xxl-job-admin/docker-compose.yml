@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  xxl-job:
+    image: xuxueli/xxl-job-admin:2.1.2
+    ports:
+      - "9020:8080"
+    networks:
+      my-network:
+        ipv4_address: 172.23.0.10
+    environment:
+      - spring.datasource.url=jdbc:mysql://rm-t4n9rdp7s6u53ou499o.mysql.singapore.rds.aliyuncs.com:3306/xxl_job?Unicode=true&characterEncoding=UTF-8
+      - spring.datasource.username=xxljob
+      - spring.datasource.password=xxljob@tuoyingtao.com
+      - spring.mail.host=smtpdm.aliyun.com
+      - spring.mail.port=25
+      - spring.mail.username=service@mail.ecouponsx.com
+      - spring.mail.password=MOBIKOKemail2020
+    volumes:
+      - ../docker-volumes/xxljob/logs:/opt/app/logs/xxljob
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1g"
+networks:
+  my-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.0.0/24
+          gateway: 172.23.0.1

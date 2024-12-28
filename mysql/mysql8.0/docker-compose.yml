@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  acedia-mysql-db:
+    container_name: acedia-mysql-db
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - MYSQL_VERSION=8.2.0
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "3306:3306"
+    networks:
+      acedia-network:
+        ipv4_address: 172.23.10.2
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+      - ./conf.d:/etc/mysql/conf.d:ro
+      - ../docker-volumes/mysql/logs:/logs:rw
+      - ../docker-volumes/mysql/data:/var/lib/mysql:rw
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_ALLOW_EMPTY_PASSWORD=no
+      - MYSQL_ROOT_PASSWORD=mysql@tuoyingtao.com
+      - MYSQL_DATABASE=acedia-mysql-db
+      - MYSQL_USER=test
+      - MYSQL_PASSWORD=test
+    command: [
+      'mysqld',
+      '--default-authentication-plugin=caching_sha2_password',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_general_ci',
+      '--innodb-buffer-pool-size=80M',
+      '--default-time-zone=+8:00',
+      '--lower-case-table-names=1',
+      '--max-connections=10000',
+      '--max-connect-errors=2000',
+      '--group-concat-max-len=102400',
+      '--max-allowed-packet=20971520',
+      '--init-connect=SET NAMES utf8mb4;',
+      '--innodb-flush-log-at-trx-commit=0',
+    ]
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '30m'
+        max-file: '1'
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1", "-uroot", "-pmysql@tuoyingtao.com" ]
+      start_period: 60s
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+networks:
+  acedia-network:
+    name: acedia-network
+    driver: bridge
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.10.0/24
+          gateway: 172.23.10.1
