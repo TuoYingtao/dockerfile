@@ -52,11 +52,11 @@ services:
     networks:
       acedia-network:
         ipv4_address: 172.23.10.2
-    volumes:
-#      - ./db:/docker-entrypoint-initdb.d/
-      - ./mysql/master/my.cnf:/etc/mysql/conf.d:ro
-      - ../docker-volumes/mysql/master/logs:/logs:rw
-      - ../docker-volumes/mysql/master/data:/var/lib/mysql:rw
+#    volumes:
+#      - ./mysql/master/db:/docker-entrypoint-initdb.d/
+#      - ./mysql/master/my.cnf:/etc/mysql/conf.d:ro
+#      - ../docker-volumes/mysql/master/logs:/logs:rw
+#      - ../docker-volumes/mysql/master/data:/var/lib/mysql:rw
     environment: *env
     command: *cmd
     <<: *conf
@@ -73,11 +73,11 @@ services:
       - acedia-mysql-db-master
     networks:
       - acedia-network
-    volumes:
-#      - ./db:/docker-entrypoint-initdb.d/
-      - ./mysql/slave/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-      - ../docker-volumes/mysql/slave/logs:/logs:rw
-      - ../docker-volumes/mysql/slave/data:/var/lib/mysql:rw
+#    volumes:
+#      - ./mysql/slave/db:/docker-entrypoint-initdb.d/
+#      - ./mysql/slave/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+#      - ../docker-volumes/mysql/slave/logs:/logs:rw
+#      - ../docker-volumes/mysql/slave/data:/var/lib/mysql:rw
     environment: *env
     command: *cmd
     <<: *conf
