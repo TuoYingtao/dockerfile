@@ -1,7 +1,7 @@
 ### MySQL - 主从同步
 
 ```shell
-docker-compose -f docker-compose.yml -p acedia-mysql-db-master -p acedia-mysql-db-slave-backup up -d
+docker-compose -f docker-compose.yml -p acedia-mysql-db-master -p acedia-mysql-db-slave-backup -p acedia-mysql-db-slave2-backup up -d
 ```
 
 ```shell
@@ -83,19 +83,19 @@ show slave status \G;
 # Slave_IO_Running 和 Slave_SQL_Running 都是Yes的话，就说明主从同步已经配置好了！
 # 如果Slave_IO_Running为Connecting，SlaveSQLRunning为Yes，则说明配置有问题，这时候就要检查配置中哪一步出现问题了哦，可根据Last_IO_Error字段信息排错或谷歌…
 # *************************** 1. row ***************************
-#                Slave_IO_State: Waiting for master to send event
-#                   Master_Host: www.zhengqingya.com
-#                   Master_User: slave
+#                Slave_IO_State: Waiting for source to send event
+#                   Master_Host: 172.23.10.2
+#                   Master_User: acedia-slave
 #                   Master_Port: 3306
 #                 Connect_Retry: 30
 #               Master_Log_File: mysql-bin.000003
-#           Read_Master_Log_Pos: 769
-#                Relay_Log_File: c598d8402b43-relay-bin.000002
-#                 Relay_Log_Pos: 320
+#           Read_Master_Log_Pos: 892
+#                Relay_Log_File: mysql-relay-bin.000002
+#                 Relay_Log_Pos: 493
 #         Relay_Master_Log_File: mysql-bin.000003
 #              Slave_IO_Running: Yes
 #             Slave_SQL_Running: Yes
-#               Replicate_Do_DB:
+#              Replicate_Do_DB:
 
 # 主从复制排错：
 # 使用 start slave 开启主从复制过程后，如果 SlaveIORunning 一直是 Connecting，则说明主从复制一直处于连接状态，这种情况一般是下面几种原因造成的，我们可以根据 Last_IO_Error 提示予以排除。
@@ -140,14 +140,24 @@ show slave status \G;
 #                 Last_IO_Error: Error connecting to source 'acedia-slave@172.23.10.2:3306'. This was attempt 1/10, with a delay of 30 seconds between attempts. Message: Access denied for user 'acedia-slave'@'172.23.10.2' (using password: YES)
 ```
 
+###### 主从复制排错
+```shell
+# 如果出现异常报错：Error connecting to source 'acedia-slave@172.23.10.2:3306'. This was attempt 10/10, with a delay of 30 seconds between attempts. Message: Authentication plugin 'caching_sha2_password' reported error: Authentication requires secure connection.
+# 1.执行
+CHANGE MASTER TO GET_MASTER_PUBLIC_KEY=1;
+# 参考：
+# https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password-replication
+# https://dev.mysql.com/doc/refman/8.0/en/change-master-to.html
+```
+
 ###### 解决主从同步数据不一致问题
 
 ```shell
 # 注意：操作的时候停止主库数据写入
 
 # 在从库查看主从同步状态
-docker exec -it mysql_slave /bin/bash
-mysql -uroot -proot
+docker exec -it acedia-mysql-db-slave-backup /bin/bash
+mysql -uroot -p
 show slave status \G
 #              Slave_IO_Running: Yes
 #             Slave_SQL_Running: No
@@ -156,21 +166,55 @@ show slave status \G
 # 先在从库停止主从同步
 stop slave;
 # 导出主库数据
-mysqldump -h www.zhengqingya.com -P 3306 -uroot -proot --all-databases > /tmp/all.sql
+mysqldump -h 172.23.10.2 -P 3306 -uroot -proot --all-databases > /tmp/all.sql
 # 导入到从库
-mysql -uroot -proot
+mysql -uroot -p
 source /tmp/all.sql;
 
 # 2、开启主从同步
 # 查看主库状态 => 拿到File和Position字段的值
-docker exec -it mysql_master /bin/bash
-mysql -uroot -proot
+docker exec -it acedia-mysql-db-master /bin/bash
+mysql -uroot -p
 show master status;
 # 从库操作
-change master to master_host='www.zhengqingya.com',master_port=3306, master_user='slave', master_password='123456', master_log_file='mysql-bin.000004', master_log_pos= 488117, master_connect_retry=30;
+CHANGE MASTER TO master_host='172.23.10.2',
+                 master_port=3306,
+                 master_user='acedia-slave',
+                 master_password='acedia-slave@123',
+                 master_log_file='mysql-bin.000003',
+                 master_log_pos= 725,
+                 master_connect_retry=30;
 start slave;
 # 查看主从同步状态
 show slave status \G
 #              Slave_IO_Running: Yes
 #             Slave_SQL_Running: Yes
 ```
+
+###### 主从数据差别不大时的不同步问题
+1. master端执行：`flush tables with read lock;`，将数据库设置为全局读锁。
+2. slave端：
+   1. 停止IO及SQL线程: `stop slave;`
+   2. 将同步错误的SQL跳过一次: `set global sql_slave_skip_counter=1;`
+   3. 启动slave: `start slave;`
+3. master端执行解锁：`unlock tables;`
+
+
+###### 主从数据差别很大时的不同步问题
+1. master端执行将数据库设置为全局读锁：`flush tables with read lock;`
+2. 使用mysqldump、mysqlpump、xtrabackup等工具对master数据库进行完整备份
+3. 将完整数据导入到从库
+4. 重新配置主从关系
+5. master端执行解锁：`unlock tables;`
+
+###### 主键冲突，错误代码1062
+情况：slave端上执行：`show slave status\G;`，报错last_error:1062，sql线程已停止工作。
+
+原因：从库上执行了写操作，然后在主库上执行了相同的SQL语句，主键冲突，主从复制状态就会报错。
+
+解决：利用perconna-toolkit工具中的py-slave-restart命令在从库跳过错误（因为主从库有相同的数据）。
+
+###### 主库更新数据，从库找不到而报错，错误代码1032
+在从库执行delete删除操作，再在主库执行更新操作，由于从库已经没有该数据，导致主从数据不一致。
+
+解决方法：在从库执行`show slave status;`，根据错误信息所知道的binlog文件和position号，在主库上通过mysqlbinlog命令查找在主库执行的哪条SQL语句导致的主从报错。把从库上丢失的这条数据补上，然后执行跳过错误。如果从库丢失了很多数据，需要考虑重新配置主从环境。

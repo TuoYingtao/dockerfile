@@ -15,13 +15,17 @@ x-config: &conf
     timeout: 10s
     retries: 5
 x-config-environment:
-  environment: &env
-    - TZ=Asia/Shanghai
-    - MYSQL_ALLOW_EMPTY_PASSWORD=no
-    - MYSQL_ROOT_PASSWORD=mysql@tuoyingtao.com
-    - MYSQL_DATABASE=acedia-mysql-db
-    - MYSQL_USER=test
-    - MYSQL_PASSWORD=test
+  environment:
+    - &env-tz TZ=Asia/Shanghai
+    - &env-mysql_allow_empty_password MYSQL_ALLOW_EMPTY_PASSWORD=no
+    - &env-mysql_root_password MYSQL_ROOT_PASSWORD=mysql@tuoyingtao.com
+    - &env-mysql_database MYSQL_DATABASE=acedia-mysql-db
+    - &env-mysql_user MYSQL_USER=test
+    - &env-mysql_password MYSQL_PASSWORD=test
+    - &env-slave_sync_user SLAVE_SYNC_USER=acedia-slave
+    - &env-slave_sync_password SLAVE_SYNC_PASSWORD=acedia-slave@123
+    - &env-master_host MASTER_HOST=172.23.10.2
+    - &env-allow_host ALLOW_HOST=172.23.10.%
 x-config-cmd:
   command: &cmd [
     'mysqld',
@@ -52,12 +56,21 @@ services:
     networks:
       acedia-network:
         ipv4_address: 172.23.10.2
-#    volumes:
-#      - ./mysql/master/db:/docker-entrypoint-initdb.d/
-#      - ./mysql/master/my.cnf:/etc/mysql/conf.d:ro
-#      - ../docker-volumes/mysql/master/logs:/logs:rw
-#      - ../docker-volumes/mysql/master/data:/var/lib/mysql:rw
-    environment: *env
+    volumes:
+      - ./mysql/master/db:/docker-entrypoint-initdb.d/
+      - ./mysql/master/conf.d/master-3306.cnf:/etc/mysql/conf.d:ro
+      - ../docker-volumes/mysql/master/logs:/logs:rw
+      - ../docker-volumes/mysql/master/data:/var/lib/mysql:rw
+    environment:
+      - *env-tz
+      - *env-mysql_allow_empty_password
+      - *env-mysql_root_password
+      - *env-mysql_database
+      - *env-mysql_user
+      - *env-mysql_password
+      - *env-slave_sync_user
+      - *env-slave_sync_password
+      - *env-allow_host
     command: *cmd
     <<: *conf
   acedia-mysql-db-slave-backup:
@@ -73,12 +86,51 @@ services:
       - acedia-mysql-db-master
     networks:
       - acedia-network
-#    volumes:
-#      - ./mysql/slave/db:/docker-entrypoint-initdb.d/
-#      - ./mysql/slave/my.cnf:/etc/mysql/conf.d/my.cnf:ro
-#      - ../docker-volumes/mysql/slave/logs:/logs:rw
-#      - ../docker-volumes/mysql/slave/data:/var/lib/mysql:rw
-    environment: *env
+    volumes:
+      - ./mysql/slave/db:/docker-entrypoint-initdb.d/
+      - ./mysql/slave/conf.d/slave-3307.cnf:/etc/mysql/conf.d:ro
+      - ../docker-volumes/mysql/slave/logs:/logs:rw
+      - ../docker-volumes/mysql/slave/data:/var/lib/mysql:rw
+    environment:
+      - *env-tz
+      - *env-mysql_allow_empty_password
+      - *env-mysql_root_password
+      - *env-mysql_database
+      - *env-mysql_user
+      - *env-mysql_password
+      - *env-slave_sync_user
+      - *env-slave_sync_password
+      - *env-master_host
+    command: *cmd
+    <<: *conf
+  acedia-mysql-db-slave2-backup:
+    container_name: acedia-mysql-db-slave2-backup
+    build:
+      context: ./mysql/slave/
+      dockerfile: Dockerfile
+      args:
+        - MYSQL_VERSION=8.2.0
+    ports:
+      - "3308:3306"
+    depends_on:
+      - acedia-mysql-db-master
+    networks:
+      - acedia-network
+    volumes:
+      - ./mysql/slave/db:/docker-entrypoint-initdb.d/
+      - ./mysql/slave/conf.d/slave-3308.cnf:/etc/mysql/conf.d:ro
+      - ../docker-volumes/mysql/slave/logs:/logs:rw
+      - ../docker-volumes/mysql/slave/data:/var/lib/mysql:rw
+    environment:
+      - *env-tz
+      - *env-mysql_allow_empty_password
+      - *env-mysql_root_password
+      - *env-mysql_database
+      - *env-mysql_user
+      - *env-mysql_password
+      - *env-slave_sync_user
+      - *env-slave_sync_password
+      - *env-master_host
     command: *cmd
     <<: *conf
 

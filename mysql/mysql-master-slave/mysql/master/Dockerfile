@@ -16,8 +16,9 @@ ENV TZ="Asia/Shanghai" \
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
     && echo $TZ > /etc/timezone
 
-COPY /my.cnf /etc/mysql/conf.d/
-COPY /db/schema.sql /docker-entrypoint-initdb.d/schema.sql
+WORKDIR /home
+
+COPY replication-setup.sh /home/
 
 # 设置容器启动时执行的命令
 CMD ["mysqld"]
