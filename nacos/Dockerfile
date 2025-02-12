@@ -1,5 +1,5 @@
 # 构建时指定的参数变量
-ARG NACOS_VERSION="v2.2.3-slim"
+ARG NACOS_VERSION="latest"
 
 # 基础镜像
 FROM nacos/nacos-server:${NACOS_VERSION}
