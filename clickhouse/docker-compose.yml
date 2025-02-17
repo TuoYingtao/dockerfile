@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  acedia-clickhouse-service:
+    container_name: acedia-clickhouse-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - CLICKHOUSE_VERSION=25.1.4
+    restart: always
+    ports:
+      - "8123:8123"
+      - "9100:9100"
+    networks:
+      acedia-network:
+        ipv4_address: 172.23.10.5
+    volumes:
+      - ./config/docker_related_config.xml:/etc/clickhouse-server/config.d/docker_related_config.xml:rw
+      - ./config/config.xml:/etc/clickhouse-server/config.xml:rw
+      - ./config/users.xml:/etc/clickhouse-server/users.xml:rw
+#      - /etc/localtime:/etc/localtime:ro
+      - ../docker-volumes/clickhouse/logs:/var/log/clickhouse-server
+      - ../docker-volumes/clickhouse/data:/var/lib/clickhouse:rw
+networks:
+  acedia-network:
+    driver: bridge
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.23.10.0/24
+          gateway: 172.23.10.1
