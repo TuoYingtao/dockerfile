@@ -1,0 +1,22 @@
+FROM anapsix/alpine-java:8_server-jre_unlimited
+
+MAINTAINER devin@mobikok.com
+
+RUN mkdir -p /opt/app
+
+# 安装 timezone 数据包
+RUN apk --no-cache add tzdata
+
+# 更换系统时区
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+RUN echo "Asia/Shanghai" > /etc/timezone
+
+WORKDIR /opt/app
+
+ADD app.jar app.jar
+
+#ENV JAVA_OPTS="-Xmx256m -Xms256m"
+ENV JAVA_OPTS=""
+
+ENTRYPOINT java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar app.jar
