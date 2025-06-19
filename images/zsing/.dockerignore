@@ -1,0 +1,6 @@
+**
+
+# 允许同级目录下特定内容
+!Dockerfile-zsign
+!.dockerignore
+
